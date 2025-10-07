@@ -13,15 +13,21 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from 'react-hook-form'
 import { Card } from '@/components/ui/card'
-import { Link } from 'react-router'
-import { RouteSignUp } from '@/helpers/RouteName'
+import { Link, useNavigate } from 'react-router'
+import { RouteIndex, RouteSignUp } from '@/helpers/RouteName'
+import { getEnv } from '@/helpers/getEnv'
+import { showToast } from '@/helpers/showToast'
+import { useDispatch } from 'react-redux'
+import { setUser } from '@/redux/user/user.slice'
+import GoogleLogin from '@/components/GoogleLogin'
 
 
 const Signin = () => {
-
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
     const formSchema = z.object({
         email: z.email(),
-        password: z.string().min(8, 'password must be atleast 8 characters')
+        password: z.string().min(3, 'Password field required')
     })
 
     const form = useForm({
@@ -31,15 +37,40 @@ const Signin = () => {
             password: '',
         },
     })
-    function onSubmit(values) {
-        console.log(values)
+
+    async function onSubmit(values) {
+        
+        try {
+            const response = await fetch(`${getEnv('VITE_API_BASE_URL')}/auth/login`,{
+                method:'post',
+                headers:{'Content-type':'application/json'},
+                credentials:'include',
+                body:JSON.stringify(values) //Json object converted to json string
+            })
+            const data = await response.json()
+            if(!response.ok){
+                showToast('error',data.message)
+            }
+            dispatch(setUser(data.user))
+            navigate(RouteIndex)
+            showToast('success',data.message)
+        } catch (error) {
+            showToast('error',error.message)
+        }
     }
 
 
     return (
+        
         <div className="flex justify-center items-center h-screen w-screen">
             <Card className={'w-[400px] p-5 shadow-lg'}>
                 <h1 className="text-2xl font-bold text-center mb-5 loginh1">Login into your Account</h1>
+                <div>
+                    <GoogleLogin />
+                    <div className='border my-5 flex items-center justify-center'>
+                        <span className='absolute bg-white text-sm'>Or</span>
+                    </div>
+                </div>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <div className='mb-5 '>
@@ -65,7 +96,7 @@ const Signin = () => {
                                     <FormItem>
                                         <FormLabel>Password</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter your Password" {...field} />
+                                            <Input type="password" placeholder="Enter your Password" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

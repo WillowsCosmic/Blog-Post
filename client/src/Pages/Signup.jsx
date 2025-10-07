@@ -15,10 +15,14 @@ import { useForm } from 'react-hook-form'
 import { Card } from '@/components/ui/card'
 import { Link, useNavigate } from 'react-router'
 import { RouteSignIn } from '@/helpers/RouteName'
+import { getEnv } from '@/helpers/getEnv'
+import { showToast } from '@/helpers/showToast'
+import GoogleLogin from '@/components/GoogleLogin'
 
 
 const Signup = () => {
 
+    const navigate = useNavigate()
     const formSchema = z.object({
         name:z.string().min(3, 'Name must be atleast 3 characters long'),
         email: z.email(),
@@ -35,14 +39,35 @@ const Signup = () => {
             confirmPassword:'',
         },
     })
-    function onSubmit(values) {
-        console.log(values)
+     async function onSubmit(values) {
+        try {
+            const response = await fetch(`${getEnv('VITE_API_BASE_URL')}/auth/register`,{
+                method:'post',
+                headers:{'Content-type':'application/json'},
+                body:JSON.stringify(values) //Json object converted to json string
+            })
+            const data = await response.json()
+            if(!response.ok){
+                showToast('error',data.message)
+            }
+
+            navigate(RouteSignIn)
+            showToast('success',data.message)
+        } catch (error) {
+            showToast('error',error.message)
+        }
     }
 
     return (
         <div className="flex justify-center items-center h-screen w-screen">
             <Card className={'w-[400px] p-5 shadow-lg'}>
                 <h1 className="text-2xl font-bold text-center mb-5 loginh1">Create your Account</h1>
+                <div>
+                    <GoogleLogin />
+                    <div className='border my-5 flex items-center justify-center'>
+                        <span className='absolute bg-white text-sm'>Or</span>
+                    </div>
+                </div>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <div className='mb-5 '>
@@ -83,7 +108,7 @@ const Signup = () => {
                                     <FormItem>
                                         <FormLabel>Password</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter your Password" {...field} />
+                                            <Input type="password" placeholder="Enter your Password" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -98,7 +123,7 @@ const Signup = () => {
                                     <FormItem>
                                         <FormLabel>Confirm Password</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Confirm Password" {...field} />
+                                            <Input type="password" placeholder="Confirm Password" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
