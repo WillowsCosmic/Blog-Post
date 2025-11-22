@@ -43,12 +43,7 @@ const User = sequelize.define("users", {
     avatar: {
         type: DataTypes.STRING(500),
         allowNull: true,
-        validate: {
-            isUrl: {
-                args: true,
-                msg: "Avatar must be a valid URL"
-            }
-        }
+        
     },
     phoneNumber: {
         type: DataTypes.STRING(20),
