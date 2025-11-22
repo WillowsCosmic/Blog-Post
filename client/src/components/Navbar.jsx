@@ -1,11 +1,10 @@
 import React from 'react'
-// import logo from '@/assets/images/logo-white.png'
 import logo from '@/assets/images/logo-white.png'
 import { Button } from './ui/button'
 import { Link, useNavigate } from 'react-router'
 import { MdLogin } from "react-icons/md";
 import SearchBox from './SearchBox';
-import { RouteIndex, RouteSignIn } from '@/helpers/RouteName';
+import { RouteIndex, RouteProfile, RouteSignIn } from '@/helpers/RouteName';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   DropdownMenu,
@@ -28,24 +27,44 @@ const Navbar = () => {
   const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const navigate = useNavigate();
-  const handlelogout = async() =>{
+  
+  const handlelogout = async() => {
     try {
-      const response = await fetch(`${getEnv('VITE_API_BASE_URL')}/auth/logout`,{
-          method:'POST',
-          credentials:'include',
-          
+      const response = await fetch(`${getEnv('VITE_API_BASE_URL')}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
       })
       const data = await response.json()
-      if(!response.ok){
-          showToast('error',data.message)
+      if (!response.ok) {
+        showToast('error', data.message)
       }
       dispatch(removeUser())
       navigate(RouteIndex)
-      showToast('success',data.message)
-  } catch (error) {
-      showToast('error',error.message)
+      showToast('success', data.message)
+    } catch (error) {
+      showToast('error', error.message)
+    }
   }
-  } 
+  
+  // ✅ Helper function to get avatar URL
+  const getAvatarUrl = () => {
+    if (!user?.user?.avatar) {
+      return usericon;
+    }
+    
+    const avatarPath = user.user.avatar;
+    
+    // If it's already a full URL (e.g., from Google OAuth)
+    if (avatarPath.startsWith('http')) {
+      return avatarPath;
+    }
+    
+    // Build full URL and remove '/api' for static files
+    const baseUrl = getEnv('VITE_API_BASE_URL').replace('/api', '');
+    const fullUrl = `${baseUrl}${avatarPath}`;
+    return fullUrl;
+  };
+  
   return (
     <div className='flex justify-between items-center h-16 fixed w-full z-20 bg-white px-5 border-b'>
       <div>
@@ -64,17 +83,26 @@ const Navbar = () => {
           </Button>
           :
           <DropdownMenu>
-            <DropdownMenuTrigger><Avatar>
-              <AvatarImage src={user.user.avatar || usericon} />
-            </Avatar></DropdownMenuTrigger>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage 
+                  src={getAvatarUrl()} 
+                  onError={(e) => {
+                    console.error('❌ Navbar: Avatar failed to load');
+                    e.target.src = usericon;
+                  }}
+                />
+                <AvatarFallback>{user.user.name?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>
                 <p>{user.user.name}</p>
                 <p className='text-sm text-gray-400'>{user.user.email}</p>
-                </DropdownMenuLabel>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="">
+                <Link to={RouteProfile}>
                   <RiUser2Fill />
                   Profile
                 </Link>
@@ -87,12 +115,9 @@ const Navbar = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handlelogout}>
-                
-                  <MdLogout color='red'/>
-                  Logout
-               
+                <MdLogout color='red'/>
+                Logout
               </DropdownMenuItem>
-              
             </DropdownMenuContent>
           </DropdownMenu>
         }

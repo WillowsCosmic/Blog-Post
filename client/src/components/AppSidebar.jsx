@@ -17,8 +17,16 @@ import { FaBloggerB } from "react-icons/fa6";
 import { FaComments } from "react-icons/fa6";
 import { HiUsers } from "react-icons/hi2";
 import { FaHeart } from "react-icons/fa";
+import { RouteBlog, RouteCategoryDetails } from "@/helpers/RouteName";
+import { useState } from "react";
+import { useFetch } from "@/hooks/useFetch";
+import { getEnv } from "@/helpers/getEnv";
 
 export function AppSidebar() {
+  const { data: categoryData } = useFetch(`${getEnv('VITE_API_BASE_URL')}/category/all-category`, {
+    method: 'get',
+    credentials: 'include'
+  })
   return (
     <Sidebar>
       <SidebarHeader className={'bg-white'}>
@@ -36,13 +44,13 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton>
                 <BiSolidCategory />
-                <Link to="">Categories</Link>
+                <Link to={RouteCategoryDetails}>Categories</Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton>
                 <FaBloggerB />
-                <Link to="">Blogs</Link>
+                <Link to={RouteBlog}>Blogs</Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
@@ -53,7 +61,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton>
-                <HiUsers/>
+                <HiUsers />
                 <Link to="">Users</Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -64,12 +72,18 @@ export function AppSidebar() {
             Categories
           </SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <FaHeart />
-                <Link to="">Category Item</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem> 
+            {categoryData && categoryData.categories.length > 0 &&
+
+              categoryData.categories.map(category =>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <FaHeart />
+                    <Link to="">{category.name}</Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            }
           </SidebarMenu>
         </SidebarGroup >
       </SidebarContent>

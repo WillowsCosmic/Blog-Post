@@ -24,10 +24,13 @@ const Signup = () => {
 
     const navigate = useNavigate()
     const formSchema = z.object({
-        name:z.string().min(3, 'Name must be atleast 3 characters long'),
-        email: z.email(),
-        password: z.string().min(8, 'password must be atleast 8 characters'),
-        confirmPassword: z.string().refine(data => data.password === data.confirmPassword, 'Password and confirm password should be same'),
+        name: z.string().min(3, 'Name must be at least 3 characters long'),
+        email: z.email('Please enter a valid email'),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
+        confirmPassword: z.string(),
+    }).refine(data => data.password === data.confirmPassword, {
+        message: 'Passwords do not match',
+        path: ['confirmPassword'], // This shows the error on the confirmPassword field
     })
 
     const form = useForm({
